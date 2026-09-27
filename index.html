@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ConvArt · Convention-Aware Creative Synthesis via Diffusion for Design Domains</title>
+<meta name="description" content="ConvArt implicitly fuses two design inputs into a novel, convention-preserving design. SIGGRAPH Asia 2026 Technical Communications.">
+<meta property="og:title" content="ConvArt — Convention-Aware Creative Synthesis via Diffusion for Design Domains">
+<meta property="og:description" content="Given two inputs, ConvArt synthesizes a novel, blended design across diverse design domains in under 1 minute on a consumer GPU. SIGGRAPH Asia 2026 Technical Communications.">
+<meta property="og:image" content="assets/figs/social.webp">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23dd4f36'/%3E%3Cpath d='M16 1a15 15 0 0 1 0 30z' fill='%234353f0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css?v=34">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.js"></script>
+</head>
+<body>
+
+<header class="rh" id="rh">
+  <div class="rh-in">
+    <a class="nav-brand" href="#top"><span class="mark"></span>ConvArt</a>
+    <nav class="rh-nav" id="rhNav" aria-label="Sections">
+      <span class="rh-now" id="rhNow" aria-hidden="true"></span>
+      <button class="rh-cur" id="rhBtn" type="button" aria-expanded="false" aria-controls="rhList">
+        <span class="rh-num" id="rhNum">§</span><span class="rh-lbl" id="rhLbl">Contents</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <ol class="rh-list" id="rhList">
+        <li><a href="#abstract"><b>01</b><span>Abstract</span></a></li>
+        <li><a href="#method"><b>02</b><span>Method</span></a></li>
+        <li><a href="#candidates"><b>03</b><span>Candidates</span></a></li>
+        <li><a href="#gallery"><b>04</b><span>Gallery</span></a></li>
+        <li><a href="#comparison"><b>05</b><span>Comparison</span></a></li>
+        <li><a href="#ablation"><b>06</b><span>Ablation</span></a></li>
+        <li><a href="#study"><b>07</b><span>Study</span></a></li>
+        <li><a href="#video"><b>08</b><span>Video</span></a></li>
+        <li><a href="#limitations"><b>09</b><span>Limitations</span></a></li>
+        <li><a href="#bibtex"><b>10</b><span>Citation</span></a></li>
+      </ol>
+    </nav>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle color theme" title="Toggle theme">
+      <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path class="sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m0-11.32L4.93 4.93m14.14 14.14-1.41-1.41" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/><circle class="sun" cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.7" fill="none"/><path class="moon" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+<section class="hero">
+  <div class="wrap">
+
+    <div class="title-row">
+      <h1 class="title" id="heroTitle"
+          aria-label="Convention-Aware Creative Synthesis via Diffusion for Design Domains">
+        <span class="tl">Convention-Aware Creative Synthesis</span><br class="br-lg">
+        <span class="tl">via Diffusion for Design Domains</span>
+      </h1>
+
+      <button class="copy-title" id="copyTitle" type="button" title="Copy title" aria-label="Copy the paper title">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2.2" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M15.5 5.5v-.3A1.7 1.7 0 0 0 13.8 3.5H5.2a1.7 1.7 0 0 0-1.7 1.7v8.6a1.7 1.7 0 0 0 1.7 1.7h.3" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>
+        <svg class="ok" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <p class="accepted">
+      <span class="accepted-track">SIGGRAPH Asia 2026, Technical Communications</span>
+      <span class="accepted-loc">Kuala Lumpur &middot; 1&ndash;4 December 2026</span>
+    </p>
+
+    <div class="byline">
+      <div>
+
+        <p class="authors">
+          <span class="author"><a href="https://bumsookim00.com/" target="_blank" rel="noopener">Bumsoo Kim</a><a
+            class="mail" href="mailto:bumsookim@cau.ac.kr" title="bumsookim@cau.ac.kr"
+            aria-label="Email Bumsoo Kim">✉</a></span><span class="comma">,</span>
+          <span class="author"><a href="https://scholar.google.com/citations?user=k1SL428AAAAJ" target="_blank" rel="noopener">Sanghyun Seo</a><a
+            class="mail corr" href="mailto:sanghyun@cau.ac.kr" title="Corresponding author — sanghyun@cau.ac.kr"
+            aria-label="Email Sanghyun Seo, corresponding author">✉</a></span>
+        </p>
+        <p class="affil">Chung-Ang University, South Korea</p>
+      </div>
+      <a class="venue-logo-plate" href="https://asia.siggraph.org/2026/" target="_blank" rel="noopener">
+        <img src="assets/imgs/siggraph_asia_2026.png" alt="SIGGRAPH Asia 2026, Kuala Lumpur"
+             width="2001" height="765">
+      </a>
+    </div>
+
+    <nav class="links" aria-label="Paper links">
+
+      <span class="lk lk-primary is-soon">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Zm0 0v5h5" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>
+        Paper<i class="btn-soon">soon</i>
+      </span>
+
+      <a class="lk" href="https://github.com/gh-BumsooKim/ConvArt" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.86l-.01 2.75c0 .26.18.58.69.48A10 10 0 0 0 12 2Z" fill="currentColor"/></svg>
+        Code<i class="btn-soon">soon</i><span class="lk-go" aria-hidden="true">↗</span>
+      </a>
+      <a class="lk" href="https://huggingface.co/spaces/BumsooKim00/ConvArt" target="_blank" rel="noopener">
+
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="m10.2 8.4 6 3.6-6 3.6V8.4Z" fill="currentColor"/></svg>
+        Demo<i class="btn-soon">soon</i><span class="lk-go" aria-hidden="true">↗</span>
+      </a>
+      <a class="lk" href="#video">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="m10 8 6 4-6 4V8Z" fill="currentColor"/><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.7" fill="none"/></svg>
+        Video<span class="lk-go lk-in" aria-hidden="true">↓</span>
+      </a>
+      <a class="lk" href="#gallery">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.7" fill="none"/><circle cx="8.8" cy="9.6" r="1.6" fill="currentColor"/><path d="m4 17 5-4.2 4 3 3.2-2.4L20 17" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>
+        Results<span class="lk-go lk-in" aria-hidden="true">↓</span>
+      </a>
+      <a class="lk" href="#bibtex">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="m9 8-5 4 5 4m6-8 5 4-5 4" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        BibTeX<span class="lk-go lk-in" aria-hidden="true">↓</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <figure class="teaser wrap">
+    <img src="assets/figs/teaser.webp" alt="ConvArt teaser: two inputs blended into a novel design across vector art, product, creature, logo and typography domains." width="2000" height="493">
+    <figcaption><b>Given two inputs, ConvArt synthesizes a novel, blended design</b> across diverse design domains in
+      about one minute on a consumer GPU.
+      <span class="credit">Logos &copy; Netflix, Google, Meta, Snap; characters &copy; Nintendo/Creatures/GAME&nbsp;FREAK.</span></figcaption>
+  </figure>
+</section>
+
+<section class="facts">
+  <div class="wrap">
+    <ul class="fact-grid">
+      <li><span class="fact-n">&lt;&thinsp;1 min</span><span class="fact-l">per-pair fine-tuning</span></li>
+      <li><span class="fact-n">10 GB</span><span class="fact-l">peak VRAM · 1× RTX 3090</span></li>
+      <li><span class="fact-n">60 iters</span><span class="fact-l">LoRA, rank 12</span></li>
+      <li><span class="fact-n">5 domains</span><span class="fact-l">vector art → typography</span></li>
+      <li><span class="fact-n">Top&thinsp;-&thinsp;1</span><span class="fact-l">in a 50-response study</span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="abstract" class="sec">
+  <div class="wrap sec-grid">
+    <header class="sec-rail"><a class="sec-num" href="#abstract" title="Copy a link to this section">01</a><h2 class="sec-h">Abstract</h2></header>
+    <div class="sec-body">
+      <p class="lead">
+        Recent generative models produce visually fascinating outcomes but often fail to preserve design conventions
+        such as rendering style, structure, or branding. We propose <b>ConvArt</b>, a convention-aware tool that
+        implicitly synthesizes novel designs by blending two inputs while adhering to their established drawing
+        conventions. Since each input pair carries its own visual heritage, an <b>orthogonal tuning scheme</b>
+        specializes a pre-trained diffusion model to each pair by conditioning on 3D spherical coordinates, requiring
+        only one minute and 10&thinsp;GB of VRAM on a consumer GPU. Users can then explore multiple outcomes for
+        human-in-the-loop design exploration. Across vector art, product, creature, logo, and typography, a user study
+        with 50 responses preferred <b>ConvArt</b> over strong baselines, including state-of-the-art commercial models.
+      </p>
+
+      <ul class="keywords" aria-label="Keywords">
+        <li>Creative Synthesis</li><li>Diffusion Models</li><li>Design Convention</li>
+        <li>LoRA Fine-tuning</li><li>Generative Design</li>
+      </ul>
+
+      <div class="contrib">
+        <h3 class="contrib-h">Contributions</h3>
+        <ol class="contrib-list">
+          <li><b>Creative Synthesis.</b> A task that <em>implicitly</em> fuses two inputs into a convention-preserving
+            design, contrasting prior explicit, attribute-driven approaches.</li>
+          <li><b>Lightweight.</b> An orthogonal tuning scheme conditions the diffusion model on 3D spherical
+            coordinates, enabling fast fine-tuning within one minute on a consumer GPU.</li>
+          <li><b>Preferred.</b> In a 50-response user study, ConvArt was selected as the top-1 choice over strong
+            commercial baselines.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="method" class="sec">
+  <div class="wrap sec-grid">
+    <header class="sec-rail"><a class="sec-num" href="#method" title="Copy a link to this section">02</a><h2 class="sec-h">Method</h2></header>
+    <div class="sec-body">
+      <p class="sec-hl">From novel views to novel designs</p>
+      <p class="sec-sub">
+        Prior work uses pose conditioning to render a <em>single</em> 3D object from a new viewpoint. We find the same
+        machinery can be repurposed to control the <em>fusion of two 2D visual concepts</em>. By decoupling the two
+        inputs inside the conditioning space, we avoid the destructive interference that plagues naive interpolation.
+      </p>
+
+      <div class="vs">
+        <div class="vs-col">
+          <span class="vs-tag">Prior work</span>
+          <h3>Explicit synthesis</h3>
+          <p>Composition and virtual try-on insert a specified element at a specified region; concept-learning methods
+            personalize a <em>single</em> subject into new contexts. Either way, <b>what comes from where is enumerated
+            up front</b>.</p>
+        </div>
+        <div class="vs-col is-ours">
+          <span class="vs-tag">This paper</span>
+          <h3>Implicit synthesis</h3>
+          <p>ConvArt fuses two distinct designs <b>without enumerating which element comes from where</b>&mdash;the way
+            a designer blends inspirations&mdash;while preserving rendering style, dominant palette and the
+            domain&rsquo;s own conventions.</p>
+        </div>
+      </div>
+
+      <div class="diagram-card">
+        <svg class="diagram" viewBox="0 0 1180 340" role="img" aria-label="ConvArt pipeline: two inputs are anchored at orthogonal poses on a spherical conditioning manifold, a LoRA-adapted U-Net is fine-tuned per pair, and the condition weight v sweeps a family of blended outputs.">
+          <defs>
+            <linearGradient id="gAB" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="var(--a)"/><stop offset="100%" stop-color="var(--b)"/>
+            </linearGradient>
+            <marker id="arw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 10 5 0 10z" fill="var(--line-strong)"/>
+            </marker>
+          </defs>
+
+          <text class="d-cap" x="20" y="26">Inputs</text>
+          <rect class="d-thumb a" x="20" y="44" width="92" height="92" rx="10"/>
+          <text class="d-lbl" x="66" y="96" text-anchor="middle">x₁</text>
+          <rect class="d-thumb b" x="20" y="196" width="92" height="92" rx="10"/>
+          <text class="d-lbl" x="66" y="248" text-anchor="middle">x₂</text>
+
+          <path class="d-arrow" d="M120 90 H176" marker-end="url(#arw)"/>
+          <path class="d-arrow" d="M120 242 H176" marker-end="url(#arw)"/>
+
+          <text class="d-cap" x="196" y="26">Orthogonal spherical conditioning</text>
+          <rect class="d-panel" x="190" y="40" width="330" height="250" rx="14"/>
+
+          <circle class="d-sphere" cx="330" cy="182" r="96"/>
+          <ellipse class="d-grid" cx="330" cy="182" rx="96" ry="34"/>
+          <ellipse class="d-grid" cx="330" cy="182" rx="34" ry="96"/>
+
+          <line class="d-axis a" x1="330" y1="182" x2="426" y2="182"/>
+          <line class="d-axis b" x1="330" y1="182" x2="330" y2="86"/>
+          <circle class="d-pt a" cx="426" cy="182" r="7"/>
+          <circle class="d-pt b" cx="330" cy="86" r="7"/>
+          <text class="d-tag a" x="436" y="187">x₁ · φ=0</text>
+          <text class="d-tag b" x="330" y="74" text-anchor="middle">x₂ · φ=π/2</text>
+
+          <path class="d-arc" d="M426 182 A96 96 0 0 0 330 86"/>
+          <circle class="d-v" cx="398" cy="114" r="6.5"/>
+          <text class="d-tag v" x="392" y="104" text-anchor="end">v</text>
+          <text class="d-note" x="330" y="306" text-anchor="middle">δ = π/2 keeps the two heritages non-interfering</text>
+
+          <path class="d-arrow" d="M528 166 H586" marker-end="url(#arw)"/>
+
+          <text class="d-cap" x="600" y="26">Per-instance LoRA</text>
+          <rect class="d-panel" x="596" y="40" width="236" height="250" rx="14"/>
+          <rect class="d-block" x="624" y="76" width="180" height="44" rx="9"/>
+          <text class="d-in" x="714" y="104" text-anchor="middle">Frozen U-Net</text>
+          <rect class="d-block lora" x="624" y="134" width="180" height="44" rx="9"/>
+          <text class="d-in" x="714" y="162" text-anchor="middle">LoRA · r = 12</text>
+          <text class="d-note" x="714" y="206" text-anchor="middle">CrossAttn + GEGLU</text>
+          <text class="d-note" x="714" y="228" text-anchor="middle">60 iterations · Adam 1e-3</text>
+          <text class="d-note strong" x="714" y="258" text-anchor="middle">≈ 1 min · 10 GB VRAM</text>
+
+          <path class="d-arrow" d="M840 166 H898" marker-end="url(#arw)"/>
+
+          <text class="d-cap" x="912" y="26">Candidates x̂<tspan class="sub" dy="3">v</tspan></text>
+          <rect class="d-out" x="912" y="44" width="112" height="112" rx="12"/>
+          <rect class="d-out ghost" x="1032" y="44" width="112" height="112" rx="12"/>
+          <rect class="d-out ghost2" x="912" y="172" width="112" height="112" rx="12"/>
+          <rect class="d-out ghost3" x="1032" y="172" width="112" height="112" rx="12"/>
+          <text class="d-note" x="1028" y="308" text-anchor="middle">sweep v → a family of designs</text>
+        </svg>
+      </div>
+
+      <div class="method-grid">
+        <div class="m-card">
+          <h3><span class="m-i">3.1</span>Orthogonal spherical conditioning</h3>
+          <p>
+            Each input is embedded with a CLIP image encoder and a spherical configuration
+            (θ,&nbsp;φ,&nbsp;r), following Zero123's convention φ&nbsp;↦&nbsp;[sin(φ),&nbsp;cos(φ)]. A relative pose
+            offset <b>δ</b> assigns the two samples to <b>orthogonal directions</b> of the conditioning space, so the
+            features of one input do not overwrite the other. The condition weight <b>v</b> linearly interpolates the
+            spherical parameters between them.
+          </p>
+          <div class="eq" data-tex="\mathbf{c}_v=\mathrm{MLP}\left(\begin{bmatrix}\mathcal{E}_{\mathrm{CLIP}}(\mathbf{x}_v)\\ lerp(\theta_1,\theta_2,v)\\ \sin(lerp(\varphi_1,\varphi_2,v))\\ \cos(lerp(\varphi_1,\varphi_2,v))\\ lerp(r_1,r_2,v)\end{bmatrix}^{\top}\right)"><code>c_v = MLP([ E_CLIP(x_v),  lerp(θ₁,θ₂,v),
+              sin(lerp(φ₁,φ₂,v)),  cos(lerp(φ₁,φ₂,v)),
+              lerp(r₁,r₂,v) ])</code></div>
+        </div>
+        <div class="m-card">
+          <h3><span class="m-i">3.2</span>Per-instance fine-tuning</h3>
+          <p>
+            Because every pair carries its own visual heritage, ConvArt specializes the model <em>per pair</em>. LoRA
+            modules are injected into the attention layers and optimized with the ε-prediction objective while
+            <b>v is sampled from {0,&nbsp;1}</b> during training&mdash;binding each visual feature to its own orthogonal
+            axis and preventing feature leakage at inference.
+          </p>
+          <div class="eq" data-tex="\mathcal{L}(\Delta\phi,\mathbf{x},c)=\mathbb{E}_{\epsilon,t,c}\left[\left\|\epsilon-\epsilon_{\phi+\Delta\phi}(\mathbf{z}_t;t,\mathbf{c}_v)\right\|_2^2\right]"><code>L(Δφ, x, c) = E[ ‖ ε − ε_(φ+Δφ)(z_t; t, c_v) ‖²₂ ]</code></div>
+        </div>
+        <div class="m-card">
+          <h3><span class="m-i">3.3</span>Inference &amp; exploration</h3>
+          <p>
+            Sampling uses classifier-free guidance (ω&nbsp;=&nbsp;3.0) with DDIM (T&nbsp;=&nbsp;50, η&nbsp;=&nbsp;1.0).
+            Once tuned, the user simply <b>drags v</b> to traverse the blend manifold and curate the candidate that
+            matches their design intent&mdash;rather than relying on a single deterministic output.
+          </p>
+          <div class="eq" data-tex="\hat{\epsilon}_v=\epsilon_\phi(\hat{\mathbf{z}}_t,t,\varnothing)+\omega\left(\epsilon_{\phi+\Delta\phi}(\hat{\mathbf{z}}_t,t,\mathbf{c}_v)-\epsilon_\phi(\hat{\mathbf{z}}_t,t,\varnothing)\right)"><code>ε̂_v = ε_φ(ẑ_t,t,∅) + ω·( ε_(φ+Δφ)(ẑ_t,t,c_v) − ε_φ(ẑ_t,t,∅) )</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="candidates" class="sec">
+  <div class="wrap sec-grid">
+    <header class="sec-rail"><a class="sec-num" href="#candidates" title="Copy a link to this section">03</a><h2 class="sec-h">Candidates</h2></header>
+    <div class="sec-body">
+      <p class="sec-hl">One model, a family of designs</p>
+      <p class="sec-sub">
+        Fine-tuning is per pair, but the result is not a single image: sweeping the condition weight
+        <b>v</b> traverses the blend manifold and yields a whole family of candidates from the same
+        pair. The designer curates the one that matches their intent&mdash;the human-in-the-loop step
+        that makes the method usable in practice.
+      </p>
+
+      <figure class="fig">
+        <img loading="lazy" src="assets/figs/candidates.webp" alt="Multiple candidate outcomes generated from a single input pair." width="1800" height="445">
+        <figcaption>Multiple candidates from a <em>single</em> input pair, produced by sweeping the condition
+          weight. The two ends of the sweep reproduce the inputs themselves; everything between and beyond
+          is a design neither input had.
+          <span class="credit">Input images &copy; Riot&nbsp;Games (League of Legends).</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="gallery" class="sec">
+  <div class="wrap sec-grid">
+    <header class="sec-rail"><a class="sec-num" href="#gallery" title="Copy a link to this section">04</a><h2 class="sec-h">Gallery</h2></header>
+    <div class="sec-body">
+      <p class="sec-hl">Results across design domains</p>
+      <p class="sec-sub">
+        Each result is produced by a model tuned on that pair alone. Notice that the output keeps the
+        <em>rendering convention</em> of its domain&mdash;flat vector strokes stay flat, 3D shading stays glossy,
+        letterforms stay type. The five domains were curated with LLM-assisted selection and manual gathering of
+        stylistically and structurally varied samples, all resized to 256&thinsp;&times;&thinsp;256.
+      </p>
+
+      <div class="filters" id="filters" role="tablist" aria-label="Filter results by domain"></div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+</section>
+
+<section id="comparison" class="sec">
+  <div class="wrap sec-grid">
+    <header class="sec-rail"><a class="sec-num" href="#comparison" title="Copy a link to this section">05</a><h2 class="sec-h">Comparison</h2></header>
+    <div class="sec-body">
+      <p class="sec-hl">Fusion, not insertion</p>
+      <p class="sec-sub">
+        Against a personalization/editing baseline (DreamO) and two large-scale commercial models (FLUX.2&nbsp;dev,
+        Nano&nbsp;Banana&nbsp;2). Instruction-based baselines receive both images plus a text prompt describing the
+        intended hybrid, for an equivalent input condition.
+      </p>
+      <figure class="fig">
+        <img loading="lazy" src="assets/figs/comparison.webp" alt="Qualitative comparison of ConvArt against DreamO, FLUX.2 dev and Nano Banana 2." width="1700" height="1613">
+        <figcaption>Prior models struggle with style preservation or fall back to simple object insertion.
+          <b>ConvArt</b> implicitly harmonizes core features from both inputs, holding fidelity and stylistic
+          consistency.
+          <span class="credit">Images &copy; Mozilla, Google, Nintendo/Creatures/GAME&nbsp;FREAK, Riot&nbsp;Games.</span></figcaption>
+      </figure>
+      <div class="callout">
+        <b>What we observe.</b> DreamO shows low fidelity and often alters the original rendering style. FLUX.2&nbsp;dev
+        is visually complete but frequently deviates from the source content. Nano&nbsp;Banana&nbsp;2 tends to perform
+        component replacement or object insertion rather than a synergetic fusion. Given that these rely on massive
+        datasets and high-end compute, our lightweight framework is an efficient, practical alternative for design work.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ablation" class="sec">
+  <div class="wrap sec-grid">
+    <header class="sec-rail"><a class="sec-num" href="#ablation" title="Copy a link to this section">06</a><h2 class="sec-h">Ablation</h2></header>
+    <div class="sec-body">
+      <p class="sec-hl">Why orthogonal?</p>
+      <p class="sec-sub">
+        We vary only the fine-tuning pose offset δ and keep everything else fixed. Near-parallel offsets
+        (π/4, 3π/4) collapse toward one input; the antipodal offset (π) yields a disjointed composition with motifs
+        floating as separate elements. Only <b>δ = π/2</b> consistently produces a coherent, unified hybrid.
+      </p>
+      <figure class="fig">
+        <img loading="lazy" src="assets/figs/ablation.webp" alt="Ablation on the fine-tuning pose offset delta." width="1800" height="875">
+        <figcaption>Ablation on the fine-tuning pose offset δ. Our orthogonal offset (π/2, boxed) gives a coherent,
+          unified hybrid.</figcaption>
+      </figure>
+
+      <div class="table-wrap">
+        <table class="tbl">
+          <caption>CLIP similarity between the output and <em>both</em> inputs across pose offsets δ. The orthogonal
+            offset achieves the highest mean and the lowest imbalance.</caption>
+          <thead>
+            <tr><th scope="col">δ</th><th scope="col">π/4</th><th scope="col">3π/4</th><th scope="col">π</th>
+              <th scope="col" class="best-col">π/2 <span class="ours-tag">ours</span></th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Mean s̄ <span class="dir">↑</span></th>
+              <td>0.801</td><td>0.832</td><td>0.808</td><td class="best-col"><b>0.861</b></td></tr>
+            <tr><th scope="row">Imbalance |s₁−s₂| <span class="dir">↓</span></th>
+              <td>0.193</td><td>0.213</td><td>0.171</td><td class="best-col"><b>0.083</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="study" class="sec">
+  <div class="wrap sec-grid">
+    <header class="sec-rail"><a class="sec-num" href="#study" title="Copy a link to this section">07</a><h2 class="sec-h">Study</h2></header>
+    <div class="sec-body">
+      <p class="sec-hl">Preferred on every criterion</p>
+      <p class="sec-sub">
+        50 responses from undergraduate and graduate students majoring in art, design, computer graphics or content
+        engineering. Participants picked their top-1 output on three criteria:
+        <b>impression</b> (is it idea-provoking?), <b>fidelity</b> (texture, painting style and structural integrity),
+        and <b>tolerance</b> (is it usable as a reference in a real design workflow?).
+      </p>
+
+      <div class="chart-card">
+        <div class="legend">
+          <span class="lg"><i class="sw f"></i>Fidelity</span>
+          <span class="lg"><i class="sw i"></i>Impression</span>
+          <span class="lg"><i class="sw t"></i>Tolerance</span>
+        </div>
+        <div class="chart" id="chart" role="img" aria-label="Top-1 selection percentage. DreamO: fidelity 0.0, impression 2.9, tolerance 5.7. FLUX-2: 26.5, 29.4, 25.7. NB2: 23.5, 26.5, 25.7. Ours: 50.0, 41.2, 42.9."></div>
+        <p class="chart-y">Top-1 selection percentage</p>
+      </div>
+
+      <div class="callout">
+        <b>ConvArt received the majority of selections across all three criteria.</b> Its strength on
+        <em>inspirational impression</em> suggests the method extends beyond simple attribute mixing and offers genuine
+        creative value; combined with its curation capability, this makes it a practical, real-world design tool.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="video" class="sec">
+  <div class="wrap sec-grid">
+    <header class="sec-rail"><a class="sec-num" href="#video" title="Copy a link to this section">08</a><h2 class="sec-h">Video</h2></header>
+    <div class="sec-body">
+
+      <figure class="vid">
+        <video controls preload="metadata" playsinline width="1280" height="720"
+               poster="assets/figs/highlights_poster.webp">
+          <source src="assets/video/highlights.mp4" type="video/mp4">
+        </video>
+        <figcaption><b>Overview.</b> Method, results across domains and the fine-tuning process.</figcaption>
+      </figure>
+
+    </div>
+  </div>
+</section>
+
+<section id="limitations" class="sec">
+  <div class="wrap sec-grid">
+    <header class="sec-rail"><a class="sec-num" href="#limitations" title="Copy a link to this section">09</a><h2 class="sec-h">Limitations &amp; future work</h2></header>
+    <div class="sec-body">
+      <div class="lim-grid">
+        <div class="lim">
+          <h3>Over-detailing</h3>
+          <p>The model sometimes elaborates textures into unnecessary clutter, adding detail the source conventions
+            never had.</p>
+        </div>
+        <div class="lim">
+          <h3>Precision-critical domains</h3>
+          <p>Preserving exact structural fidelity remains hard for <b>typography</b> and <b>logo</b> design; our
+            implicit fusion best suits domains that tolerate stylistic variation.</p>
+        </div>
+        <div class="lim">
+          <h3>What's next</h3>
+          <p>Adaptive angle selection conditioned on the input pair, extension to <b>three or more</b> inputs,
+            structure-aware conditioning for precision-critical domains, and a comparison against independently
+            learned condition embeddings for each input.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="bibtex" class="sec">
+  <div class="wrap sec-grid">
+    <header class="sec-rail"><a class="sec-num" href="#bibtex" title="Copy a link to this section">10</a><h2 class="sec-h">Citation</h2></header>
+    <div class="sec-body">
+      <div class="bib">
+        <button class="copy-btn" id="copyBtn" type="button">Copy</button>
+        <pre id="bibText"><code>@inproceedings{kim2026convart,
+  title     = {Convention-Aware Creative Synthesis via Diffusion for Design Domains},
+  author    = {Kim, Bumsoo and Seo, Sanghyun},
+  booktitle = {SIGGRAPH Asia 2026 Technical Communications (SA '26)},
+  year      = {2026},
+  location  = {Kuala Lumpur, Malaysia},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  numpages  = {4},
+  doi       = {10.1145/3829339.3847844},
+  url       = {https://doi.org/10.1145/3829339.3847844}
+}</code></pre>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="more" class="sec more">
+  <div class="wrap">
+    <div class="more-head">
+      <div>
+        <h2 class="more-h">More research from <a href="https://bumsookim00.com/" target="_blank" rel="noopener">Bumsoo&nbsp;Kim</a></h2>
+        <p class="more-note">First-author work only</p>
+      </div>
+      <a class="more-all" href="https://bumsookim00.com/" target="_blank" rel="noopener">
+        All publications
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 17 17 7m0 0h-7m7 0v7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+
+  </div>
+
+  <div class="more-strip" id="moreStrip">
+    <div class="more-track" id="moreTrack">
+      <a class="more-card" href="https://gh-bumsookim.github.io/Tex-Shadow/" target="_blank" rel="noopener">
+        <div class="more-thumb"><img loading="lazy" src="assets/more/texshadow.webp?v=2" alt="Tex-Shadow project thumbnail" width="720" height="480"></div>
+        <span class="more-venue">SIGGRAPH 2026 Posters</span>
+        <span class="more-title">Tex-Shadow: Synthesizing Textured 3D Shadow Art via 3D-Aware Diffusion Prior</span>
+      </a>
+      <a class="more-card" href="https://bumsookim00.com/PixRes/" target="_blank" rel="noopener">
+        <div class="more-thumb"><img loading="lazy" src="assets/more/pixres.webp?v=2" alt="PixRes project thumbnail" width="720" height="307"></div>
+        <span class="more-venue">ECCV 2026 LoViF&nbsp;<i>· Oral</i></span>
+        <span class="more-title">Noise Frequencies Let Pixel-Space Diffusion Priors Detect Native-Resolution Images</span>
+      </a>
+      <a class="more-card" href="https://gh-bumsookim.github.io/SoundsThatShape/" target="_blank" rel="noopener">
+        <div class="more-thumb"><img loading="lazy" src="assets/more/soundsthatshape.webp?v=2" alt="Sounds That Shape project thumbnail" width="414" height="270"></div>
+        <span class="more-venue">ICASSP 2026</span>
+        <span class="more-title">Sounds That Shape: Audio-Driven 3D Mesh Generation with Attribute-Decoupled SDS</span>
+      </a>
+      <a class="more-card" href="https://gh-bumsookim.github.io/VideoTimeTravel/" target="_blank" rel="noopener">
+        <div class="more-thumb"><img loading="lazy" src="assets/more/videotimetravel.webp?v=2" alt="VideoTimeTravel project thumbnail" width="320" height="320"></div>
+        <span class="more-venue">The Visual Computer 2026</span>
+        <span class="more-title">VideoTimeTravel: High-Fidelity Face Re-Aging Diffusion Models for Production Video</span>
+      </a>
+      <a class="more-card" href="https://gh-bumsookim.github.io/Cartoon-Hallucinations-Detection/" target="_blank" rel="noopener">
+        <div class="more-thumb"><img loading="lazy" src="assets/more/makevlm.webp?v=2" alt="Cartoon hallucination detection project thumbnail" width="720" height="406"></div>
+        <span class="more-venue">WACV 2025</span>
+        <span class="more-title">Make VLM Recognize Visual Hallucination on Cartoon Character Image with Pose Information</span>
+      </a>
+      <a class="more-card" href="https://gh-bumsookim.github.io/ToonAging/" target="_blank" rel="noopener">
+        <div class="more-thumb"><img loading="lazy" src="assets/more/toonaging.webp?v=2" alt="ToonAging project thumbnail" width="720" height="718"></div>
+        <span class="more-venue">CVPR 2024 AI4CC</span>
+        <span class="more-title">ToonAging: Face Re-Aging upon Artistic Portrait Style Transfer</span>
+      </a>
+      <a class="more-card" href="https://gh-bumsookim.github.io/Minecraft-ify/" target="_blank" rel="noopener">
+        <div class="more-thumb"><img loading="lazy" src="assets/more/minecraftify.webp?v=2" alt="Minecraft-ify project thumbnail" width="516" height="526"></div>
+        <span class="more-venue">NeurIPS 2023 ML4CD&nbsp;<i>· Oral</i></span>
+        <span class="more-title">Minecraft-ify: Minecraft Style Image Generation with Text-Guided Image Editing</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-row">
+      <div>
+        <p class="foot-t">Convention-Aware Creative Synthesis via Diffusion for Design Domains</p>
+        <p class="foot-s">Bumsoo Kim · Sanghyun Seo &nbsp;—&nbsp; Chung-Ang University, South Korea</p>
+        <p class="foot-s">SIGGRAPH Asia 2026 · Technical Communications · Kuala Lumpur, 1–4 December 2026</p>
+      </div>
+
+      <div class="visitors">
+        <script type="text/javascript" id="mapmyvisitors"
+                src="https://mapmyvisitors.com/map.js?cl=ffffff&amp;w=a&amp;t=tt&amp;d=F_rgCE2KkF2hYEgR64QlTDrpIxbyU4KhORfxRJu_yYM"></script>
+      </div>
+    </div>
+    <p class="foot-note">
+      &copy; 2026 the authors. The paper is published by ACM under a
+      <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">Creative Commons
+      Attribution 4.0</a> license. Input images are used for research demonstration; all trademarks and characters
+      belong to their respective owners.
+    </p>
+  </div>
+</footer>
+
+<a class="to-top" id="toTop" href="#top" aria-label="Back to top" title="Back to top">
+  <svg viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
+    <circle class="tt-track" cx="22" cy="22" r="20.5"/>
+    <circle class="tt-prog" id="ttProg" cx="22" cy="22" r="20.5" pathLength="100"/>
+    <path d="M22 29V15m-6 6 6-6 6 6" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</a>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Figure viewer">
+  <div class="lb-stage" id="lbStage"><img class="lb-img" id="lbImg" alt="" draggable="false"></div>
+  <div class="lb-bar">
+    <p class="lb-cap" id="lbCap"></p>
+    <div class="lb-ctrl">
+      <button class="lb-btn" type="button" data-z="out" aria-label="Zoom out">&minus;</button>
+      <button class="lb-btn lb-pct" type="button" data-z="reset" aria-label="Reset zoom" id="lbPct">100%</button>
+      <button class="lb-btn" type="button" data-z="in" aria-label="Zoom in">+</button>
+      <button class="lb-btn lb-x" type="button" id="lbClose" aria-label="Close figure viewer">&times;</button>
+    </div>
+  </div>
+</div>
+
+<script src="data.js?v=34"></script>
+<script src="script.js?v=34"></script>
+</body>
+</html>
